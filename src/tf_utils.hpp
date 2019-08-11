@@ -22,19 +22,19 @@
 
 #pragma once
 
-#if defined(_MSC_VER)
-#  if !defined(COMPILER_MSVC)
-#    define COMPILER_MSVC // Set MSVC visibility of exported symbols in the shared library.
-#  endif
-#  pragma warning(push)
-#  pragma warning(disable : 4190)
-#endif
-
 #include <c_api.h> // TensorFlow C API header
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
+// TF_CAPI_EXPORT extern int64_t TF_TensorElementCount(const TF_Tensor* tensor);
+// #ifdef __cplusplus
+// } /* end extern "C" */
+// #endif
 
 namespace tf_utils {
 
@@ -84,26 +84,26 @@ void SetTensorData(TF_Tensor* tensor, const std::vector<T>& data) {
   SetTensorsData(tensor, data.data(), data.size() * sizeof(T));
 }
 
-template <typename T>
-std::vector<T> GetTensorData(const TF_Tensor* tensor) {
-  auto data = static_cast<T*>(TF_TensorData(tensor));
-  if (data == nullptr) {
-    return {};
-  }
+// template <typename T>
+// std::vector<T> GetTensorData(const TF_Tensor* tensor) {
+//   auto data = static_cast<T*>(TF_TensorData(tensor));
+//   if (data == nullptr) {
+//     return {};
+//   }
 
-  return {data, data + TF_TensorElementCount(tensor)};
-}
+//   return {data, data + TF_TensorElementCount(tensor)};
+// }
 
-template <typename T>
-std::vector<std::vector<T>> GetTensorsData(const std::vector<TF_Tensor*>& tensors) {
-  std::vector<std::vector<T>> data;
-  data.reserve(tensors.size());
-  for (auto t : tensors) {
-    data.push_back(GetTensorData<T>(t));
-  }
+// template <typename T>
+// std::vector<std::vector<T>> GetTensorsData(const std::vector<TF_Tensor*>& tensors) {
+//   std::vector<std::vector<T>> data;
+//   data.reserve(tensors.size());
+//   for (auto t : tensors) {
+//     data.push_back(GetTensorData<T>(t));
+//   }
 
-  return data;
-}
+//   return data;
+// }
 
 TF_SessionOptions* CreateSessionOptions(double gpu_memory_fraction, TF_Status* status = nullptr);
 
@@ -112,7 +112,3 @@ const char* DataTypeToString(TF_DataType data_type);
 const char* CodeToString(TF_Code code);
 
 } // namespace tf_utils
-
-#if defined(_MSC_VER)
-#  pragma warning(pop)
-#endif

@@ -28,6 +28,23 @@
 #include <cstring>
 #include <fstream>
 
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
+
+// int64_t TF_TensorElementCount(const TF_Tensor* t) {
+//   int64_t result = 1;
+//   int rank = TF_NumDims(t);
+//   for (int dim = 0; dim < rank; ++dim) {
+//     result *= TF_Dim(t, dim);
+//   }
+//   return result;
+// }
+
+// #ifdef __cplusplus
+// } /* end extern "C" */
+// #endif
+
 namespace tf_utils {
 
 namespace {

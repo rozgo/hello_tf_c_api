@@ -6,30 +6,24 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-    set(CMAKE_VERBOSE_MAKEFILE ON)
-    add_compile_options(-Wall -Wextra -pedantic-errors -Werror)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_compile_options(/W4 /WX)
-    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.11)
-        add_compile_options(/permissive-)
-    endif()
-endif()
+set(CMAKE_VERBOSE_MAKEFILE ON)
+add_compile_options(-Wall -Wextra -pedantic-errors)
 
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/tensorflow)
-    make_directory(${CMAKE_SOURCE_DIR}/tensorflow)
-endif()
-
-if(UNIX AND NOT APPLE)
-    if (NOT EXISTS ${CMAKE_SOURCE_DIR}/tensorflow)
-        make_directory(${CMAKE_SOURCE_DIR}/tensorflow)
-    endif()
-
-    include_directories(/usr/local/include/tensorflow/c)
-    link_directories(/usr/local/lib)
-endif()
+include_directories(/usr/local/include/tensorflow/c)
+link_directories(/usr/local/lib)
 
 include_directories(src/3rdparty/scope_guard)
+
+include_directories(
+    /usr/include/ImageMagick-6
+    /usr/include/x86_64-linux-gnu/ImageMagick-6
+)
+link_directories(/usr/lib/x86_64-linux-gnu)
+
+add_definitions( -DMAGICKCORE_QUANTUM_DEPTH=16 )
+add_definitions( -DMAGICKCORE_HDRI_ENABLE=0 )
+# find_package(ImageMagick COMPONENTS Magick)
+# include_directories(${ImageMagick_INCLUDE_DIRS})
 
 add_executable(hello_tf src/hello_tf.cpp)
 target_link_libraries(hello_tf tensorflow)
@@ -39,6 +33,9 @@ target_link_libraries(session_run tensorflow)
 
 add_executable(load_graph src/load_graph.cpp)
 target_link_libraries(load_graph tensorflow)
+
+add_executable(deeplab src/deeplab.cpp src/tf_utils.cpp src/tf_utils.hpp)
+target_link_libraries(deeplab tensorflow MagickCore-6.Q16 MagickWand-6.Q16)
 
 add_executable(interface src/interface.cpp src/tf_utils.cpp src/tf_utils.hpp)
 target_link_libraries(interface tensorflow)
