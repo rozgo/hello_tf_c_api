@@ -37,8 +37,8 @@ target_link_libraries(load_graph tensorflow)
 add_executable(deeplab src/deeplab.cpp src/tf_utils.cpp src/tf_utils.hpp)
 target_link_libraries(deeplab tensorflow MagickCore-6.Q16 MagickWand-6.Q16)
 
-add_executable(interface src/interface.cpp src/tf_utils.cpp src/tf_utils.hpp)
-target_link_libraries(interface tensorflow)
+# add_executable(interface src/interface.cpp src/tf_utils.cpp src/tf_utils.hpp)
+# target_link_libraries(interface tensorflow)
 
 add_executable(graph_info src/graph_info.cpp src/tf_utils.cpp src/tf_utils.hpp)
 target_link_libraries(graph_info tensorflow)
@@ -52,8 +52,8 @@ target_link_libraries(tensor_info tensorflow)
 add_executable(allocate_tensor src/allocate_tensor.cpp)
 target_link_libraries(allocate_tensor tensorflow)
 
-add_executable(batch_interface src/batch_interface.cpp src/tf_utils.cpp src/tf_utils.hpp)
-target_link_libraries(batch_interface tensorflow)
+# add_executable(batch_interface src/batch_interface.cpp src/tf_utils.cpp src/tf_utils.hpp)
+# target_link_libraries(batch_interface tensorflow)
 
 configure_file(models/graph.pb ${CMAKE_CURRENT_BINARY_DIR}/graph.pb COPYONLY)
 

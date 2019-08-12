@@ -1,9 +1,11 @@
 #include <c_api.h> // TensorFlow C API header
+#include <c_api_experimental.h>
 #include <scope_guard.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 
 // https://imagemagick.org/api/magick-image.php
 #include <wand/magick_wand.h>
@@ -55,11 +57,7 @@ int main() {
 
   std::vector<std::uint8_t> pixels;
   pixels.resize(512 * 288 * 3);
-  MagickExportImagePixels(mw, 0, 0, 512, 288, "RGB", CharPixel, &pixels[0]);
-
-	if(mw) mw = DestroyMagickWand(mw);
-
-
+  MagickExportImagePixels(mw, 0, 0, 512, 288, "RGB", CharPixel, pixels.data());
   // std::cout << "pixels: " << pixels << std::endl;
 
 
@@ -83,8 +81,8 @@ int main() {
     return 1;
   }
 
-  auto graph = TF_NewGraph();
-  auto status = TF_NewStatus();
+  TF_Graph* graph = TF_NewGraph();
+  TF_Status* status = TF_NewStatus();
   SCOPE_EXIT{ TF_DeleteStatus(status); };
   auto opts = TF_NewImportGraphDefOptions();
 
@@ -113,23 +111,28 @@ int main() {
   }
 
   const std::vector<std::int64_t> input_dims = {1, 512, 288, 3};
-  // std::vector<std::uint8_t> pix(pixels, 512 * 288 * 3);
-
-  auto input_tensor = tf_utils::CreateTensor(TF_UINT8, input_dims, pixels);
+  TF_Tensor* input_tensor = tf_utils::CreateTensor(TF_UINT8, input_dims, pixels);
   SCOPE_EXIT{ tf_utils::DeleteTensor(input_tensor); };
 
   const std::vector<std::int64_t> output_dims = {1, 512, 288};
-  TF_Tensor* output_tensor = {tf_utils::CreateEmptyTensor(TF_UINT8, output_dims)};
+  TF_Tensor* output_tensor = {tf_utils::CreateEmptyTensor(TF_INT64, output_dims)};
+  SCOPE_EXIT{ tf_utils::DeleteTensor(output_tensor); };
+
+  // auto options = tf_utils::CreateSessionOptions(100, status);
+  // if (TF_GetCode(status) != TF_OK) {
+  //   std::cout << "Error CreateSessionOptions";
+  //   return 5;
+  // }
 
   auto options = TF_NewSessionOptions();
+  // TF_EnableXLACompilation(options, true);
+
   auto sess = TF_NewSession(graph, options, status);
   TF_DeleteSessionOptions(options);
 
   if (TF_GetCode(status) != TF_OK) {
     return 4;
   }
-
-
 
   TF_SessionRun(sess,
                 nullptr, // Run options.
@@ -139,6 +142,8 @@ int main() {
                 nullptr, // Run metadata.
                 status // Output status.
                 );
+
+  // std::cout << "STATUS: " << TF_Message(status->get()) << std::endl;
 
   if (TF_GetCode(status) != TF_OK) {
     std::cout << "Error run session";
@@ -159,15 +164,15 @@ int main() {
 
   auto data = static_cast<std::int64_t*>(TF_TensorData(output_tensor));
 
+  // data[512] = 3;
+  // data[612] = 2;
+  // data[712] = 1;
+
   std::vector<std::int64_t> output;
   output.assign(data, data + 512 * 288);
 
-  std::cout << "Output vals" << std::endl;
-  for (auto i=output.begin(); i!=output.end(); ++i) {
-    std::cout << *i << ", ";
-  }
-  std::cout << std::endl;
-
+  std::cout << " max element is: " << *std::max_element(data , data + 512 * 288) << std::endl;
+  std::cout << "Output max_value: " << *std::max_element(output.begin(), output.end()) << std::endl;
 
   return 0;
 }
